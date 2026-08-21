@@ -63,7 +63,7 @@ def create_synthetic_textbook_pdf(pdf_path: Path) -> None:
 
 def make_textbook_metadata(source_file: str) -> TextbookMetadata:
     return TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="Synthetic Functions",

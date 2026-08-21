@@ -311,7 +311,7 @@ def test_generated_manifest_save_load_and_validation(
     )
 
     textbook_metadata = TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="Synthetic Functions Textbook",

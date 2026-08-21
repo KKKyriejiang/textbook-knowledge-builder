@@ -37,7 +37,7 @@ def test_pdf_to_section_sources_integration(tmp_path):
     textbook_config = {
         "textbooks": [
             {
-                "grade": 11,
+                "grade": "11",
                 "course_id": "MCR3U",
                 "course_name": "Functions",
                 "textbook": "MCR3U Functions",
@@ -99,7 +99,7 @@ def test_pdf_to_section_sources_integration(tmp_path):
     first_section = section_sources[0]
     second_section = section_sources[1]
 
-    assert first_section.textbook_metadata.grade == 11
+    assert first_section.textbook_metadata.grade == "11"
     assert first_section.textbook_metadata.course_id == "MCR3U"
 
     assert (

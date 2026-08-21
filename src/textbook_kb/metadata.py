@@ -7,11 +7,24 @@ from pathlib import Path
 class TextbookMetadata:
     """Metadata that describes a textbook as a whole."""
 
-    grade: int
+    grade: str
     course_id: str
     course_name: str
     textbook: str
     source_file: str
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("grade", self.grade),
+            ("course_id", self.course_id),
+            ("course_name", self.course_name),
+            ("textbook", self.textbook),
+            ("source_file", self.source_file),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(
+                    f"{field_name} must be a non-empty string"
+                )
 
 
 @dataclass(frozen=True, slots=True)
