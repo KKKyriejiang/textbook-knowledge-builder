@@ -1,6 +1,8 @@
 import json
+import pytest
 
 from textbook_kb.metadata import (
+    SectionMetadata,
     TextbookMetadata,
     find_textbook_metadata,
     load_textbook_metadata,
@@ -155,3 +157,64 @@ def test_find_textbook_metadata_raises_when_duplicate():
         assert "Multiple textbook metadata records found" in str(error)
     else:
         raise AssertionError("Expected ValueError")
+
+def test_section_metadata_stores_expected_fields():
+    metadata = SectionMetadata(
+        unit="Quadratic Functions",
+        chapter="Chapter 3",
+        section="3.2 Vertex Form",
+        page_start=142,
+        page_end=149,
+    )
+
+    assert metadata.unit == "Quadratic Functions"
+    assert metadata.chapter == "Chapter 3"
+    assert metadata.section == "3.2 Vertex Form"
+    assert metadata.page_start == 142
+    assert metadata.page_end == 149
+
+def test_section_metadata_allows_missing_chapter():
+    metadata = SectionMetadata(
+        unit="Quadratic Functions",
+        chapter=None,
+        section="Vertex Form",
+        page_start=142,
+        page_end=149,
+    )
+
+    assert metadata.chapter is None
+
+def test_section_metadata_rejects_empty_section():
+    with pytest.raises(ValueError, match="Section name cannot be empty"):
+        SectionMetadata(
+            unit="Quadratic Functions",
+            chapter=None,
+            section="   ",
+            page_start=142,
+            page_end=149,
+        )
+
+def test_section_metadata_rejects_invalid_page_start():
+    with pytest.raises(ValueError, match="page_start must be at least 1"):
+        SectionMetadata(
+            unit="Quadratic Functions",
+            chapter=None,
+            section="Vertex Form",
+            page_start=0,
+            page_end=149,
+        )
+
+def test_section_metadata_rejects_reversed_page_range():
+    with pytest.raises(
+        ValueError,
+        match="page_end must be greater than or equal to page_start",
+    ):
+        SectionMetadata(
+            unit="Quadratic Functions",
+            chapter=None,
+            section="Vertex Form",
+            page_start=149,
+            page_end=142,
+        )        
+
+

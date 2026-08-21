@@ -14,6 +14,28 @@ class TextbookMetadata:
     source_file: str
 
 
+@dataclass(frozen=True, slots=True)
+class SectionMetadata:
+    """Metadata that describes a section within a textbook."""
+
+    unit: str | None
+    chapter: str | None
+    section: str
+    page_start: int
+    page_end: int
+
+    def __post_init__(self) -> None:
+        if not self.section.strip():
+            raise ValueError("Section name cannot be empty")
+
+        if self.page_start < 1:
+            raise ValueError("page_start must be at least 1")
+
+        if self.page_end < self.page_start:
+            raise ValueError(
+                "page_end must be greater than or equal to page_start"
+            )
+
 def load_textbook_metadata(config_path: str | Path) -> list[TextbookMetadata]:
     """Load textbook metadata records from a JSON configuration file."""
 
