@@ -37,6 +37,18 @@ class SectionMetadata:
             )
 
 
+@dataclass(frozen=True, slots=True)
+class SectionManifest:
+    """Section metadata records associated with one source textbook."""
+
+    source_file: str
+    sections: tuple[SectionMetadata, ...]
+
+    def __post_init__(self) -> None:
+        if not self.source_file.strip():
+            raise ValueError("source_file cannot be empty")
+
+
 def load_textbook_metadata(
     config_path: str | Path,
 ) -> list[TextbookMetadata]:
@@ -72,26 +84,42 @@ def find_textbook_metadata(
 
     if len(matches) > 1:
         raise ValueError(
-            f"Multiple textbook metadata records found for source file: {source_file}"
+            f"Multiple textbook metadata records found for source file: "
+            f"{source_file}"
         )
 
     return matches[0]
 
 
-def save_section_metadata(
-    sections: list[SectionMetadata],
+def validate_section_manifest(
+    manifest: SectionManifest,
+    textbook_metadata: TextbookMetadata,
+) -> None:
+    """Validate that a section manifest belongs to the textbook."""
+
+    if manifest.source_file != textbook_metadata.source_file:
+        raise ValueError(
+            f"Section manifest source file {manifest.source_file} "
+            f"does not match textbook source file "
+            f"{textbook_metadata.source_file}"
+        )
+
+
+def save_section_manifest(
+    manifest: SectionManifest,
     output_path: str | Path,
 ) -> None:
-    """Save section metadata records to a JSON file."""
+    """Save a section manifest to a JSON file."""
 
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     data = {
+        "source_file": manifest.source_file,
         "sections": [
             asdict(section)
-            for section in sections
-        ]
+            for section in manifest.sections
+        ],
     }
 
     with output_path.open("w", encoding="utf-8") as file:
@@ -103,17 +131,22 @@ def save_section_metadata(
         )
 
 
-def load_section_metadata(
+def load_section_manifest(
     input_path: str | Path,
-) -> list[SectionMetadata]:
-    """Load section metadata records from a JSON file."""
+) -> SectionManifest:
+    """Load a section manifest from a JSON file."""
 
     input_path = Path(input_path)
 
     with input_path.open("r", encoding="utf-8") as file:
         data = json.load(file)
 
-    return [
+    sections = tuple(
         SectionMetadata(**item)
         for item in data["sections"]
-    ]
+    )
+
+    return SectionManifest(
+        source_file=data["source_file"],
+        sections=sections,
+    )

@@ -3,12 +3,14 @@ import json
 import pytest
 
 from textbook_kb.metadata import (
+    SectionManifest,
     SectionMetadata,
     TextbookMetadata,
     find_textbook_metadata,
-    load_section_metadata,
+    load_section_manifest,
     load_textbook_metadata,
-    save_section_metadata,
+    save_section_manifest,
+    validate_section_manifest,
 )
 
 
@@ -205,8 +207,8 @@ def test_section_metadata_rejects_reversed_page_range():
         )
 
 
-def test_save_and_load_section_metadata(tmp_path):
-    sections = [
+def test_section_manifest_stores_source_and_sections():
+    sections = (
         SectionMetadata(
             unit="Quadratic Functions",
             chapter="Chapter 3",
@@ -221,15 +223,100 @@ def test_save_and_load_section_metadata(tmp_path):
             page_start=111,
             page_end=120,
         ),
-    ]
+    )
+
+    manifest = SectionManifest(
+        source_file="MCR3U_Functions.pdf",
+        sections=sections,
+    )
+
+    assert manifest.source_file == "MCR3U_Functions.pdf"
+    assert manifest.sections == sections
+
+
+def test_section_manifest_rejects_empty_source_file():
+    with pytest.raises(
+        ValueError,
+        match="source_file cannot be empty",
+    ):
+        SectionManifest(
+            source_file="   ",
+            sections=(),
+        )
+
+
+def test_save_and_load_section_manifest(tmp_path):
+    manifest = SectionManifest(
+        source_file="MCR3U_Functions.pdf",
+        sections=(
+            SectionMetadata(
+                unit="Quadratic Functions",
+                chapter="Chapter 3",
+                section="3.1 Introduction to Quadratics",
+                page_start=100,
+                page_end=110,
+            ),
+            SectionMetadata(
+                unit="Quadratic Functions",
+                chapter="Chapter 3",
+                section="3.2 Vertex Form",
+                page_start=111,
+                page_end=120,
+            ),
+        ),
+    )
 
     output_path = tmp_path / "sections.json"
 
-    save_section_metadata(
-        sections,
+    save_section_manifest(
+        manifest,
         output_path,
     )
 
-    loaded_sections = load_section_metadata(output_path)
+    loaded_manifest = load_section_manifest(output_path)
 
-    assert loaded_sections == sections
+    assert loaded_manifest == manifest
+
+
+def test_validate_section_manifest_accepts_matching_textbook():
+    manifest = SectionManifest(
+        source_file="MCR3U_Functions.pdf",
+        sections=(),
+    )
+
+    textbook_metadata = TextbookMetadata(
+        grade=11,
+        course_id="MCR3U",
+        course_name="Functions",
+        textbook="MCR3U Functions",
+        source_file="MCR3U_Functions.pdf",
+    )
+
+    validate_section_manifest(
+        manifest,
+        textbook_metadata,
+    )
+
+
+def test_validate_section_manifest_rejects_mismatched_textbook():
+    manifest = SectionManifest(
+        source_file="MHF4U_Advanced_Functions.pdf",
+        sections=(),
+    )
+
+    textbook_metadata = TextbookMetadata(
+        grade=11,
+        course_id="MCR3U",
+        course_name="Functions",
+        textbook="MCR3U Functions",
+        source_file="MCR3U_Functions.pdf",
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="does not match textbook source file",
+    ):
+        validate_section_manifest(
+            manifest,
+            textbook_metadata,
+        )
