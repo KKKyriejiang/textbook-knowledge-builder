@@ -1,5 +1,5 @@
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 
@@ -36,7 +36,10 @@ class SectionMetadata:
                 "page_end must be greater than or equal to page_start"
             )
 
-def load_textbook_metadata(config_path: str | Path) -> list[TextbookMetadata]:
+
+def load_textbook_metadata(
+    config_path: str | Path,
+) -> list[TextbookMetadata]:
     """Load textbook metadata records from a JSON configuration file."""
 
     config_path = Path(config_path)
@@ -48,6 +51,7 @@ def load_textbook_metadata(config_path: str | Path) -> list[TextbookMetadata]:
         TextbookMetadata(**item)
         for item in data["textbooks"]
     ]
+
 
 def find_textbook_metadata(
     textbooks: list[TextbookMetadata],
@@ -72,3 +76,44 @@ def find_textbook_metadata(
         )
 
     return matches[0]
+
+
+def save_section_metadata(
+    sections: list[SectionMetadata],
+    output_path: str | Path,
+) -> None:
+    """Save section metadata records to a JSON file."""
+
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    data = {
+        "sections": [
+            asdict(section)
+            for section in sections
+        ]
+    }
+
+    with output_path.open("w", encoding="utf-8") as file:
+        json.dump(
+            data,
+            file,
+            indent=2,
+            ensure_ascii=False,
+        )
+
+
+def load_section_metadata(
+    input_path: str | Path,
+) -> list[SectionMetadata]:
+    """Load section metadata records from a JSON file."""
+
+    input_path = Path(input_path)
+
+    with input_path.open("r", encoding="utf-8") as file:
+        data = json.load(file)
+
+    return [
+        SectionMetadata(**item)
+        for item in data["sections"]
+    ]

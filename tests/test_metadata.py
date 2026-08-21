@@ -1,37 +1,15 @@
 import json
+
 import pytest
 
 from textbook_kb.metadata import (
     SectionMetadata,
     TextbookMetadata,
     find_textbook_metadata,
+    load_section_metadata,
     load_textbook_metadata,
+    save_section_metadata,
 )
-
-
-
-
-from textbook_kb.metadata import (
-    TextbookMetadata,
-    load_textbook_metadata,
-)
-
-def test_textbook_metadata_stores_expected_fields():
-    metadata = TextbookMetadata(
-        grade=11,
-        course_id="MCR3U",
-        course_name="Functions",
-        textbook="MCR3U Functions",
-        source_file="MCR3U_Functions.pdf",
-    )
-
-    assert metadata.grade == 11
-    assert metadata.course_id == "MCR3U"
-    assert metadata.course_name == "Functions"
-    assert metadata.textbook == "MCR3U Functions"
-    assert metadata.source_file == "MCR3U_Functions.pdf"
-
-
 
 
 def test_textbook_metadata_stores_expected_fields():
@@ -119,15 +97,14 @@ def test_find_textbook_metadata_raises_when_missing():
         )
     ]
 
-    try:
+    with pytest.raises(
+        ValueError,
+        match="No textbook metadata found",
+    ):
         find_textbook_metadata(
             textbooks,
             "Unknown.pdf",
         )
-    except ValueError as error:
-        assert "No textbook metadata found" in str(error)
-    else:
-        raise AssertionError("Expected ValueError")
 
 
 def test_find_textbook_metadata_raises_when_duplicate():
@@ -148,15 +125,15 @@ def test_find_textbook_metadata_raises_when_duplicate():
         ),
     ]
 
-    try:
+    with pytest.raises(
+        ValueError,
+        match="Multiple textbook metadata records found",
+    ):
         find_textbook_metadata(
             textbooks,
             "MCR3U_Functions.pdf",
         )
-    except ValueError as error:
-        assert "Multiple textbook metadata records found" in str(error)
-    else:
-        raise AssertionError("Expected ValueError")
+
 
 def test_section_metadata_stores_expected_fields():
     metadata = SectionMetadata(
@@ -173,6 +150,7 @@ def test_section_metadata_stores_expected_fields():
     assert metadata.page_start == 142
     assert metadata.page_end == 149
 
+
 def test_section_metadata_allows_missing_chapter():
     metadata = SectionMetadata(
         unit="Quadratic Functions",
@@ -184,8 +162,12 @@ def test_section_metadata_allows_missing_chapter():
 
     assert metadata.chapter is None
 
+
 def test_section_metadata_rejects_empty_section():
-    with pytest.raises(ValueError, match="Section name cannot be empty"):
+    with pytest.raises(
+        ValueError,
+        match="Section name cannot be empty",
+    ):
         SectionMetadata(
             unit="Quadratic Functions",
             chapter=None,
@@ -194,8 +176,12 @@ def test_section_metadata_rejects_empty_section():
             page_end=149,
         )
 
+
 def test_section_metadata_rejects_invalid_page_start():
-    with pytest.raises(ValueError, match="page_start must be at least 1"):
+    with pytest.raises(
+        ValueError,
+        match="page_start must be at least 1",
+    ):
         SectionMetadata(
             unit="Quadratic Functions",
             chapter=None,
@@ -203,6 +189,7 @@ def test_section_metadata_rejects_invalid_page_start():
             page_start=0,
             page_end=149,
         )
+
 
 def test_section_metadata_rejects_reversed_page_range():
     with pytest.raises(
@@ -215,6 +202,34 @@ def test_section_metadata_rejects_reversed_page_range():
             section="Vertex Form",
             page_start=149,
             page_end=142,
-        )        
+        )
 
 
+def test_save_and_load_section_metadata(tmp_path):
+    sections = [
+        SectionMetadata(
+            unit="Quadratic Functions",
+            chapter="Chapter 3",
+            section="3.1 Introduction to Quadratics",
+            page_start=100,
+            page_end=110,
+        ),
+        SectionMetadata(
+            unit="Quadratic Functions",
+            chapter="Chapter 3",
+            section="3.2 Vertex Form",
+            page_start=111,
+            page_end=120,
+        ),
+    ]
+
+    output_path = tmp_path / "sections.json"
+
+    save_section_metadata(
+        sections,
+        output_path,
+    )
+
+    loaded_sections = load_section_metadata(output_path)
+
+    assert loaded_sections == sections
