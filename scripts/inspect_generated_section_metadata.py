@@ -44,7 +44,7 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help=(
             "Only use explicit structural text patterns "
-            "during heading candidate detection."
+            "for heading classification."
         ),
     )
 
@@ -97,6 +97,36 @@ def parse_args() -> argparse.Namespace:
         ),
     )
 
+    parser.add_argument(
+        "--min-title-font-size",
+        type=float,
+        default=14.0,
+        help=(
+            "Minimum font size for a possible "
+            "Section title."
+        ),
+    )
+
+    parser.add_argument(
+        "--max-title-vertical-gap",
+        type=float,
+        default=100.0,
+        help=(
+            "Maximum vertical distance between a "
+            "Section number and its title."
+        ),
+    )
+
+    parser.add_argument(
+        "--max-title-top",
+        type=float,
+        default=200.0,
+        help=(
+            "Maximum bbox top position for a possible "
+            "Section title."
+        ),
+    )
+
     return parser.parse_args()
 
 
@@ -109,6 +139,10 @@ def main() -> None:
     headings = extract_structure_headings(
         pdf_path=args.pdf_path,
         regex_only=args.regex_only,
+        enrich_titles=True,
+        min_title_font_size=args.min_title_font_size,
+        max_title_vertical_gap=args.max_title_vertical_gap,
+        max_title_top=args.max_title_top,
     )
 
     occurrences = classify_heading_occurrences(
@@ -205,6 +239,12 @@ def main() -> None:
         if record.unit is not None
     )
 
+    sections_with_title = sum(
+        1
+        for record in records
+        if " " in record.section
+    )
+
     print()
     print("=" * 80)
     print("SECTION METADATA SUMMARY")
@@ -223,6 +263,11 @@ def main() -> None:
     print(
         f"With Unit context: "
         f"{sections_with_unit}"
+    )
+
+    print(
+        f"With extracted Section title: "
+        f"{sections_with_title}"
     )
 
     print("Page-end reasons:")

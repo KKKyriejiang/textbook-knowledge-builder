@@ -3,7 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from textbook_kb.section_titles import (
+    enrich_section_heading_titles,
+)
 from textbook_kb.structure_candidates import (
+    StructureCandidate,
     scan_structure_candidates,
 )
 from textbook_kb.structure_headings import (
@@ -37,7 +41,10 @@ class StructureHeadingGroup:
                     "must have the same kind."
                 )
 
-            if heading.number.casefold() != self.number.casefold():
+            if (
+                heading.number.casefold()
+                != self.number.casefold()
+            ):
                 raise ValueError(
                     "All headings in a StructureHeadingGroup "
                     "must have the same number."
@@ -55,6 +62,23 @@ class StructureHeadingGroup:
         return len(self.headings) > 1
 
 
+def select_heading_candidates(
+    candidates: tuple[StructureCandidate, ...],
+    regex_only: bool,
+) -> tuple[StructureCandidate, ...]:
+    if not regex_only:
+        return candidates
+
+    return tuple(
+        candidate
+        for candidate in candidates
+        if any(
+            reason != "large font"
+            for reason in candidate.reasons
+        )
+    )
+
+
 def extract_structure_headings(
     pdf_path: Path,
     start_page: int = 1,
@@ -62,7 +86,42 @@ def extract_structure_headings(
     min_font_size: float = 14.0,
     max_heading_length: int = 120,
     regex_only: bool = False,
+    enrich_titles: bool = False,
+    min_title_font_size: float = 14.0,
+    max_title_vertical_gap: float = 100.0,
+    max_title_top: float = 200.0,
+    max_title_length: int = 120,
 ) -> tuple[StructureHeading, ...]:
+    if enrich_titles:
+        all_candidates = scan_structure_candidates(
+            pdf_path=pdf_path,
+            start_page=start_page,
+            end_page=end_page,
+            min_font_size=min_font_size,
+            max_heading_length=max_heading_length,
+            regex_only=False,
+        )
+
+        heading_candidates = (
+            select_heading_candidates(
+                candidates=all_candidates,
+                regex_only=regex_only,
+            )
+        )
+
+        headings = classify_structure_candidates(
+            heading_candidates
+        )
+
+        return enrich_section_heading_titles(
+            headings=headings,
+            candidates=all_candidates,
+            min_title_font_size=min_title_font_size,
+            max_vertical_gap=max_title_vertical_gap,
+            max_title_top=max_title_top,
+            max_title_length=max_title_length,
+        )
+
     candidates = scan_structure_candidates(
         pdf_path=pdf_path,
         start_page=start_page,
