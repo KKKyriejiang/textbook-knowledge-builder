@@ -15,7 +15,7 @@ class HeadingKind(str, Enum):
 
 KEYWORD_HEADING_PATTERN = re.compile(
     r"^(?P<kind>unit|chapter|section)\s+"
-    r"(?P<number>\d+(?:\.\d+)*|[IVXLCDM]+|[A-Z])"
+    r"(?P<number>\d+(?:\.\d+)*|[IVXLCDM]+)"
     r"(?:\s*[:\-–—]\s*|\s+)?"
     r"(?P<title>.*)$",
     re.IGNORECASE,

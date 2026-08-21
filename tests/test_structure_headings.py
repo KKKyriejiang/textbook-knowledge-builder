@@ -145,6 +145,48 @@ def test_large_font_only_candidate_is_not_classified() -> None:
     assert heading is None
 
 
+def test_chapter_review_is_not_classified_as_chapter_number() -> None:
+    candidate = make_candidate(
+        text="Chapter Review",
+        page_number=80,
+        reasons=("chapter",),
+    )
+
+    heading = classify_structure_candidate(
+        candidate
+    )
+
+    assert heading is None
+
+
+def test_chapter_self_test_is_not_classified_as_chapter_number() -> None:
+    candidate = make_candidate(
+        text="Chapter Self-Test",
+        page_number=81,
+        reasons=("chapter",),
+    )
+
+    heading = classify_structure_candidate(
+        candidate
+    )
+
+    assert heading is None
+
+
+def test_chapter_task_is_not_classified_as_chapter_number() -> None:
+    candidate = make_candidate(
+        text="Chapter Task",
+        page_number=82,
+        reasons=("chapter",),
+    )
+
+    heading = classify_structure_candidate(
+        candidate
+    )
+
+    assert heading is None
+
+
 def test_classify_structure_candidates_filters_non_headings() -> None:
     candidates = (
         make_candidate(
