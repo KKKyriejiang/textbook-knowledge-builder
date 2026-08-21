@@ -1,0 +1,11 @@
+{
+  "textbooks": [
+    {
+      "grade": 11,
+      "course_id": "MCR3U",
+      "course_name": "Functions",
+      "textbook": "MCR3U Functions",
+      "source_file": "MCR3U_Functions.pdf"
+    }
+  ]
+}
