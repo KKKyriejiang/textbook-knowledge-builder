@@ -4,26 +4,15 @@ from pathlib import Path
 
 import fitz
 
-from textbook_kb.heading_occurrences import (
-    classify_heading_occurrences,
-)
-from textbook_kb.metadata import (
-    SectionManifest,
-    SectionMetadata,
-)
+from textbook_kb.heading_occurrences import classify_heading_occurrences
+from textbook_kb.metadata import SectionManifest, SectionMetadata
 from textbook_kb.section_metadata_builder import (
     build_section_metadata_records,
     derive_section_ranges,
 )
-from textbook_kb.structure_boundaries import (
-    detect_structure_boundaries,
-)
-from textbook_kb.structure_hierarchy import (
-    build_section_hierarchy,
-)
-from textbook_kb.structure_pipeline import (
-    extract_structure_headings,
-)
+from textbook_kb.structure_boundaries import detect_structure_boundaries
+from textbook_kb.structure_hierarchy import build_section_hierarchy
+from textbook_kb.structure_pipeline import extract_structure_headings
 
 
 def validate_generated_section_metadata(
@@ -34,37 +23,35 @@ def validate_generated_section_metadata(
             "Generated section metadata must contain at least one section."
         )
 
-    section_names: set[str] = set()
-
+    seen_sections: set[str] = set()
     previous_section: SectionMetadata | None = None
 
     for section in sections:
-        normalized_name = section.section.strip().casefold()
+        normalized_section = section.section.strip().casefold()
 
-        if normalized_name in section_names:
+        if normalized_section in seen_sections:
             raise ValueError(
-                f"Duplicate generated section metadata: "
-                f"{section.section}"
+                f"Duplicate generated section metadata: {section.section}"
             )
 
-        section_names.add(
-            normalized_name
-        )
+        seen_sections.add(normalized_section)
+
+        if section.page_start < 1:
+            raise ValueError("page_start must be at least 1.")
+
+        if section.page_end < section.page_start:
+            raise ValueError(
+                "page_end must be greater than or equal to page_start."
+            )
 
         if previous_section is not None:
-            if (
-                section.page_start
-                <= previous_section.page_start
-            ):
+            if section.page_start <= previous_section.page_start:
                 raise ValueError(
-                    "Generated sections must have strictly "
-                    "increasing page_start values."
+                    "Generated sections must have strictly increasing "
+                    "page_start values."
                 )
 
-            if (
-                section.page_start
-                <= previous_section.page_end
-            ):
+            if section.page_start <= previous_section.page_end:
                 raise ValueError(
                     "Generated section page ranges must not overlap."
                 )
@@ -77,13 +64,9 @@ def build_generated_section_manifest(
     sections: tuple[SectionMetadata, ...],
 ) -> SectionManifest:
     if not source_file.strip():
-        raise ValueError(
-            "source_file must be non-empty."
-        )
+        raise ValueError("source_file must be non-empty.")
 
-    validate_generated_section_metadata(
-        sections
-    )
+    validate_generated_section_metadata(sections)
 
     return SectionManifest(
         source_file=source_file,
@@ -98,24 +81,20 @@ def generate_section_manifest_from_pdf(
     min_font_size: float = 14.0,
     max_heading_length: int = 120,
     min_body_font_size: float = 14.0,
-    max_body_top: float = 180.0,
+    max_body_top: float = 260.0,
     min_body_font_gap: float = 2.0,
     min_boundary_font_size: float = 18.0,
-    max_boundary_top: float = 180.0,
+    max_boundary_top: float = 260.0,
     min_title_font_size: float = 14.0,
     max_title_vertical_gap: float = 100.0,
-    max_title_top: float = 200.0,
+    max_title_top: float = 260.0,
     max_title_length: int = 120,
 ) -> SectionManifest:
     if not pdf_path.exists():
-        raise FileNotFoundError(
-            f"PDF file does not exist: {pdf_path}"
-        )
+        raise FileNotFoundError(f"PDF file does not exist: {pdf_path}")
 
     if pdf_path.suffix.lower() != ".pdf":
-        raise ValueError(
-            f"Expected a PDF file: {pdf_path}"
-        )
+        raise ValueError(f"Expected a PDF file: {pdf_path}")
 
     with fitz.open(pdf_path) as document:
         final_page = document.page_count
@@ -139,9 +118,7 @@ def generate_section_manifest_from_pdf(
         min_body_font_gap=min_body_font_gap,
     )
 
-    hierarchy = build_section_hierarchy(
-        occurrences
-    )
+    hierarchy = build_section_hierarchy(occurrences)
 
     boundaries = detect_structure_boundaries(
         pdf_path=pdf_path,
@@ -155,9 +132,7 @@ def generate_section_manifest_from_pdf(
         final_page=final_page,
     )
 
-    sections = build_section_metadata_records(
-        ranges
-    )
+    sections = build_section_metadata_records(ranges)
 
     return build_generated_section_manifest(
         source_file=pdf_path.name,

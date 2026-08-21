@@ -7,31 +7,40 @@ from textbook_kb.metadata import (
     find_textbook_metadata,
     load_section_manifest,
     load_textbook_metadata,
-    save_section_manifest,
     validate_section_manifest,
 )
-from textbook_kb.structure_manifest import generate_section_manifest_from_pdf
+from textbook_kb.section_source_export import (
+    build_section_sources_from_pdf,
+    save_section_sources_json,
+)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Automatically extract textbook structure and generate "
-            "a validated SectionManifest."
+            "Build local-only SectionSource JSON from a textbook PDF "
+            "and a generated SectionManifest."
         )
     )
 
     parser.add_argument(
         "pdf_path",
         type=Path,
-        help="Path to the textbook PDF.",
+        help="Path to the local textbook PDF.",
+    )
+
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        required=True,
+        help="Path to the SectionManifest JSON.",
     )
 
     parser.add_argument(
         "--textbook-config",
         type=Path,
         default=Path("config/textbooks.json"),
-        help="Path to textbook metadata configuration.",
+        help="Path to textbook metadata config.",
     )
 
     parser.add_argument(
@@ -39,17 +48,8 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=None,
         help=(
-            "Output path for SectionManifest. Defaults to "
-            "data/intermediate/<pdf_stem>_sections.json."
-        ),
-    )
-
-    parser.add_argument(
-        "--include-large-font-headings",
-        action="store_true",
-        help=(
-            "Allow large-font-only candidates to participate in "
-            "heading classification."
+            "Output path for local-only section sources JSON. "
+            "Defaults to data/intermediate/<pdf_stem>_section_sources.json."
         ),
     )
 
@@ -65,19 +65,15 @@ def resolve_output_path(
 
     return (
         Path("data/intermediate")
-        / f"{pdf_path.stem}_sections.json"
+        / f"{pdf_path.stem}_section_sources.json"
     )
 
 
 def main() -> None:
     args = parse_args()
 
-    manifest = generate_section_manifest_from_pdf(
-        pdf_path=args.pdf_path,
-        regex_only=not args.include_large_font_headings,
-    )
-
     textbooks = load_textbook_metadata(args.textbook_config)
+    manifest = load_section_manifest(args.manifest)
 
     textbook_metadata = find_textbook_metadata(
         textbooks=textbooks,
@@ -89,36 +85,32 @@ def main() -> None:
         textbook_metadata=textbook_metadata,
     )
 
+    section_sources = build_section_sources_from_pdf(
+        pdf_path=args.pdf_path,
+        textbook_metadata=textbook_metadata,
+        section_manifest=manifest,
+    )
+
     output_path = resolve_output_path(
         pdf_path=args.pdf_path,
         output_path=args.output,
     )
 
-    save_section_manifest(
-        manifest=manifest,
+    save_section_sources_json(
+        section_sources=section_sources,
         output_path=output_path,
     )
 
-    loaded_manifest = load_section_manifest(output_path)
-
-    validate_section_manifest(
-        manifest=loaded_manifest,
-        textbook_metadata=textbook_metadata,
-    )
-
-    if loaded_manifest != manifest:
-        raise ValueError(
-            "Saved SectionManifest does not match generated manifest."
-        )
-
     print(f"PDF: {args.pdf_path}")
-    print(f"Textbook: {textbook_metadata.textbook}")
-    print(f"Course: {textbook_metadata.course_id} {textbook_metadata.course_name}")
-    print(f"Generated sections: {len(manifest.sections)}")
+    print(f"Manifest: {args.manifest}")
+    print(f"Generated SectionSource records: {len(section_sources)}")
     print(f"Output: {output_path}")
     print()
-    print("Manifest validation: PASS")
-    print("Save/load round trip: PASS")
+    print("Privacy warning:")
+    print(
+        "This output contains extracted textbook text. "
+        "Keep it local and do not commit it to a public GitHub repository."
+    )
 
 
 if __name__ == "__main__":

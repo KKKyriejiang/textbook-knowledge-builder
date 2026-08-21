@@ -36,3 +36,27 @@ data/intermediate/*
 
 # Generated processed data
 data/processed/*
+
+
+# Copyrighted textbook inputs and derived local-only artifacts
+data/raw/
+data/intermediate/*section_sources*.json
+data/intermediate/*_section_sources.json
+data/intermediate/*source*.json
+data/processed/*knowledge*.json
+data/processed/*knowledge_base*.json
+data/processed/*kb*.json
+
+# Local debug outputs that may contain extracted textbook text
+data/intermediate/*debug*.txt
+data/intermediate/*inspection*.txt
+data/intermediate/*extracted*.txt
+
+# Real PDFs and extracted text dumps
+*.pdf
+*.PDF
+*.txt
+
+# Keep synthetic fixtures allowed if you later need them
+!tests/fixtures/
+!tests/fixtures/**
