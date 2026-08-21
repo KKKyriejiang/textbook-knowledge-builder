@@ -50,7 +50,7 @@ def test_select_section_pages_returns_expected_page_range():
     )
 
     textbook_metadata = TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="MCR3U Functions",
@@ -94,7 +94,7 @@ def test_select_section_pages_raises_when_page_is_missing():
     )
 
     textbook_metadata = TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="MCR3U Functions",
@@ -140,7 +140,7 @@ def test_select_section_pages_raises_when_sources_are_mixed():
     )
 
     textbook_metadata = TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="MCR3U Functions",
@@ -186,7 +186,7 @@ def test_select_section_pages_raises_when_textbook_source_does_not_match():
     )
 
     textbook_metadata = TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="MCR3U Functions",
@@ -237,7 +237,7 @@ def test_build_section_source_returns_validated_section_source():
     )
 
     textbook_metadata = TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="MCR3U Functions",

@@ -20,7 +20,7 @@ def test_load_textbook_structure_returns_validated_structure(tmp_path):
     textbook_config = {
         "textbooks": [
             {
-                "grade": 11,
+                "grade": "11",
                 "course_id": "MCR3U",
                 "course_name": "Functions",
                 "textbook": "MCR3U Functions",
@@ -63,7 +63,7 @@ def test_load_textbook_structure_returns_validated_structure(tmp_path):
 
     assert isinstance(structure, TextbookStructure)
 
-    assert structure.textbook_metadata.grade == 11
+    assert structure.textbook_metadata.grade == "11"
     assert structure.textbook_metadata.course_id == "MCR3U"
 
     assert (
@@ -83,7 +83,7 @@ def test_load_textbook_structure_rejects_mismatched_manifest(tmp_path):
     textbook_config = {
         "textbooks": [
             {
-                "grade": 11,
+                "grade": "11",
                 "course_id": "MCR3U",
                 "course_name": "Functions",
                 "textbook": "MCR3U Functions",
@@ -154,7 +154,7 @@ def test_build_textbook_section_sources_builds_all_sections():
     ]
 
     textbook_metadata = TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="MCR3U Functions",
@@ -221,7 +221,7 @@ def test_build_textbook_section_sources_propagates_source_validation():
     ]
 
     textbook_metadata = TextbookMetadata(
-        grade=11,
+        grade="11",
         course_id="MCR3U",
         course_name="Functions",
         textbook="MCR3U Functions",
