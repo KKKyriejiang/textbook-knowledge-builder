@@ -26,3 +26,27 @@ def load_textbook_metadata(config_path: str | Path) -> list[TextbookMetadata]:
         TextbookMetadata(**item)
         for item in data["textbooks"]
     ]
+
+def find_textbook_metadata(
+    textbooks: list[TextbookMetadata],
+    source_file: str,
+) -> TextbookMetadata:
+    """Find the textbook metadata associated with a source PDF filename."""
+
+    matches = [
+        textbook
+        for textbook in textbooks
+        if textbook.source_file == source_file
+    ]
+
+    if len(matches) == 0:
+        raise ValueError(
+            f"No textbook metadata found for source file: {source_file}"
+        )
+
+    if len(matches) > 1:
+        raise ValueError(
+            f"Multiple textbook metadata records found for source file: {source_file}"
+        )
+
+    return matches[0]
