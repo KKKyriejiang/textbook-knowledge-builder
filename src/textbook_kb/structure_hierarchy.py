@@ -180,6 +180,13 @@ def build_section_hierarchy(
                 section_chapter_number.casefold()
             )
 
+        if (
+            inferred_chapter is not None
+            and inferred_chapter.page_number
+            > heading.page_number
+        ):
+            inferred_chapter = None
+
         chapter_context = (
             inferred_chapter
             if inferred_chapter is not None

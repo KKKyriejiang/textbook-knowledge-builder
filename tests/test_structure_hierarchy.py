@@ -402,6 +402,43 @@ def test_section_number_selects_matching_chapter() -> None:
     assert hierarchy[1].chapter_heading == chapter_2
 
 
+def test_future_matching_chapter_is_not_attached_to_section() -> None:
+    future_chapter = make_heading(
+        kind=HeadingKind.CHAPTER,
+        number="4",
+        page_number=50,
+        top=60.0,
+        title="Polynomial Functions",
+    )
+
+    section = make_heading(
+        kind=HeadingKind.SECTION,
+        number="4.1",
+        page_number=40,
+        top=70.0,
+        title="Power Functions",
+    )
+
+    occurrences = (
+        make_occurrence(
+            future_chapter,
+            HeadingOccurrenceRole.UNKNOWN,
+        ),
+        make_occurrence(
+            section,
+            HeadingOccurrenceRole.BODY,
+        ),
+    )
+
+    hierarchy = build_section_hierarchy(
+        occurrences
+    )
+
+    assert len(hierarchy) == 1
+    assert hierarchy[0].chapter_heading is None
+    assert hierarchy[0].section_heading == section
+
+
 def test_new_chapter_updates_section_context() -> None:
     unit = make_heading(
         kind=HeadingKind.UNIT,
